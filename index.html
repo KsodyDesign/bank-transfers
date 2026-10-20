@@ -1,0 +1,2348 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Гонки под контролем — Банковские переводы | Ретунский Савелий (Гр. 24140)</title>
+  <meta name="description" content="Отчёт и система верификации лабораторного проекта «Гонки под контролем — банковские переводы» по операционным системам. Студент Ретунский Савелий, группа 24140.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-subtle: #f8f8fa;
+      --surface: #ffffff;
+      --surface-hover: #f4f4f6;
+      --card: #ffffff;
+      --border: #e4e4e7;
+      --border-subtle: #eeeeef;
+      --border-dark: #27272a;
+      
+      --ink: #09090b;
+      --ink-secondary: #52525b;
+      --ink-tertiary: #9ca3af;
+      --ink-subtle: #d4d4d8;
+      
+      --accent-black: #09090b;
+      --accent-white: #ffffff;
+      
+      --code-bg: #0e1117;
+      --code-border: #222734;
+      --code-ink: #f4f4f5;
+      
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+      
+      --sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: 36px; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font: 400 15px/1.65 var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    /* Sidebar - Strictly Minimalist Monochrome */
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      padding: 28px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      z-index: 20;
+    }
+
+    .brand-box {
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .brand-title {
+      font-size: 15.5px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      line-height: 1.25;
+    }
+    .brand-sub {
+      font-size: 12px;
+      color: var(--ink-tertiary);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-tertiary);
+      padding: 0 8px;
+    }
+
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+    }
+    nav a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--ink-secondary);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: background 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s ease;
+    }
+    nav a .num {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-tertiary);
+      transition: color 0.18s ease;
+    }
+    nav a:hover {
+      background: var(--surface-hover);
+      color: var(--ink);
+      transform: translateX(2px);
+    }
+    nav a.active {
+      background: var(--surface-hover);
+      color: var(--ink);
+      font-weight: 650;
+    }
+    nav a.active .num {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .sidebar-footer {
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 11.5px;
+      color: var(--ink-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Main Container */
+    main {
+      padding: 44px clamp(20px, 4vw, 68px) 120px;
+      max-width: 1120px;
+      width: 100%;
+    }
+
+    section {
+      margin-bottom: 72px;
+      scroll-margin-top: 40px;
+    }
+
+    /* Minimalist Section Tag - NO DOTS */
+    .sec-tag {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-tertiary);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    h1 {
+      font-size: clamp(26px, 3.4vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.18;
+      color: var(--ink);
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-size: clamp(20px, 2.3vw, 25px);
+      font-weight: 750;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    h3 {
+      font-size: 16.5px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      margin: 20px 0 8px;
+    }
+    .lead {
+      font-size: 15.5px;
+      color: var(--ink-secondary);
+      max-width: 74ch;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    /* Editorial Hero Card */
+    .hero-banner {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px clamp(20px, 3vw, 36px);
+      margin-bottom: 48px;
+    }
+    .student-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 24px 0 20px;
+      padding: 16px 20px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .student-item small {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-tertiary);
+      margin-bottom: 2px;
+      font-weight: 600;
+    }
+    .student-item b {
+      font-size: 14.5px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: var(--radius-sm);
+      padding: 9px 18px;
+      font: 600 13.5px var(--sans);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all .16s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--ink);
+      color: #ffffff;
+      border: 1px solid var(--ink);
+    }
+    .btn-primary:hover {
+      background: #27272a;
+      border-color: #27272a;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      border-color: #d4d4d8;
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12.5px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      margin: 16px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+    th, td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    tr:last-child td { border-bottom: 0; }
+    tr:hover td { background: var(--surface-hover); }
+
+    /* Minimalist Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      font-family: var(--mono);
+      border: 1px solid var(--border);
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+    }
+    .badge.ok, .badge.status-ok {
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+      border-color: var(--border);
+      font-weight: 650;
+    }
+    .badge.bad {
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+      border-color: var(--border);
+    }
+    .badge.warn {
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+      border-color: var(--border);
+    }
+
+    /* Step Blocks with Smooth Animated Text (NO PLASHKI) */
+    .step-block {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      padding: 24px;
+      margin-bottom: 28px;
+      transition: border-color .2s ease;
+    }
+    .step-block:hover {
+      border-color: #d4d4d8;
+    }
+
+    .step-eyebrow {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--ink-tertiary);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      min-height: 20px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .step-eyebrow.typing::after {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 12px;
+      background: var(--ink-tertiary);
+      margin-left: 4px;
+      animation: cursorBlink 0.6s infinite;
+    }
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+    .step-title {
+      font-size: 18px;
+      font-weight: 750;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .step-desc {
+      color: var(--ink-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    /* Screenshots in Context */
+    .screenshot-figure {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin: 14px 0;
+    }
+    .screenshot-img-wrap {
+      position: relative;
+      background: #000;
+      cursor: zoom-in;
+      display: block;
+      overflow: hidden;
+    }
+    .screenshot-img-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    }
+    .screenshot-img-wrap:hover img {
+      opacity: 0.94;
+      transform: scale(1.015);
+    }
+    .zoom-hint {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      font-size: 11px;
+      font-family: var(--sans);
+      padding: 4px 9px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      pointer-events: none;
+    }
+    .screenshot-caption {
+      padding: 12px 16px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+    .screenshot-caption b {
+      display: block;
+      font-size: 13.5px;
+      color: var(--ink);
+      margin-bottom: 2px;
+      font-weight: 600;
+    }
+    .screenshot-caption span {
+      font-size: 12.5px;
+      color: var(--ink-tertiary);
+    }
+
+    /* Terminal Command Box */
+    .cmd-box {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-sm);
+      padding: 9px 14px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: #e4e4e7;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .cmd-box span::before {
+      content: "$ ";
+      color: var(--ink-tertiary);
+    }
+
+    /* Interactive Code Viewer */
+    .tabs-header {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 0;
+      color: var(--ink-secondary);
+      font: 500 13px var(--sans);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+    .tab-btn:hover {
+      color: var(--ink);
+      background: var(--surface-hover);
+    }
+    .tab-btn.active {
+      color: var(--ink);
+      background: var(--surface-hover);
+      font-weight: 700;
+    }
+    .code-box {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .code-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid var(--code-border);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-tertiary);
+    }
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f4f4f5;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font: 500 11.5px var(--sans);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background .15s;
+    }
+    .copy-btn:hover { background: rgba(255, 255, 255, 0.16); }
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow-x: auto;
+      font: 400 12.5px/1.65 var(--mono);
+      color: var(--code-ink);
+      max-height: 460px;
+    }
+
+    /* Trace Simulator */
+    .trace-container {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+      margin-top: 14px;
+    }
+    .accounts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .account-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      transition: all .2s ease;
+    }
+    .account-card.locked {
+      border-color: var(--ink);
+      background: #f4f4f5;
+    }
+    .acc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--ink-secondary);
+    }
+    .acc-lock-status {
+      font-size: 10.5px;
+      font-family: var(--mono);
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: var(--border);
+      color: var(--ink-secondary);
+    }
+    .account-card.locked .acc-lock-status {
+      background: var(--ink);
+      color: #fff;
+    }
+    .acc-balance {
+      font-family: var(--mono);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+    .sum-indicator {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      margin-top: 14px;
+      font-size: 13.5px;
+      font-weight: 600;
+      gap: 16px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sum-indicator > div:first-child {
+      flex: 1;
+      min-width: 0;
+    }
+    .sum-indicator.in-flight {
+      background: var(--surface-hover);
+      border-color: #71717a;
+      color: var(--ink);
+    }
+    .sum-indicator .sum-num {
+      font-family: var(--mono);
+      font-size: 19px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: baseline;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .trace-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .trace-steps-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .trace-step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      color: var(--ink-secondary);
+      font-size: 12.5px;
+      line-height: 1.45;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .trace-step-item:hover {
+      background: var(--surface-hover);
+      color: var(--ink);
+    }
+    .trace-step-item.active {
+      background: var(--surface-hover);
+      border-color: var(--border);
+      color: var(--ink);
+      font-weight: 600;
+      transform: translateX(3px);
+    }
+    .step-idx {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--border);
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+
+    /* Benchmark Chart */
+    .bench-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: center;
+      margin-top: 14px;
+    }
+    .chart-container {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      height: 210px;
+    }
+    .chart-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--ink-secondary);
+    }
+    .col-val {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .col-bar {
+      width: 100%;
+      max-width: 44px;
+      background: #71717a;
+      border-radius: 4px 4px 0 0;
+      height: 0;
+      transition: height .8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .chart-col:nth-child(3) .col-bar {
+      background: #18181b; /* Peak highlight */
+    }
+
+    /* Collapsible Accordion Sections (Sections 6, 7, etc.) */
+    details.accordion-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+    }
+    details.accordion-item:hover {
+      border-color: #d4d4d8;
+    }
+    details.accordion-item summary {
+      cursor: pointer;
+      font-weight: 650;
+      font-size: 14.5px;
+      list-style: none;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--ink);
+      user-select: none;
+      background: var(--bg);
+      transition: background 0.18s ease;
+    }
+    details.accordion-item summary:hover {
+      background: var(--surface-hover);
+    }
+    details.accordion-item summary::-webkit-details-marker { display: none; }
+    .accordion-chevron {
+      width: 16px;
+      height: 16px;
+      stroke: var(--ink-tertiary);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.2s ease;
+      flex-shrink: 0;
+    }
+    details[open] .accordion-chevron {
+      transform: rotate(180deg);
+      stroke: var(--ink);
+    }
+    .accordion-content {
+      padding: 16px 18px 20px;
+      color: var(--ink-secondary);
+      font-size: 14px;
+      line-height: 1.65;
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg);
+      animation: accordionFade 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes accordionFade {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Lightbox Modal */
+    .lightbox-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+    .lightbox-modal.active {
+      display: grid;
+      opacity: 1;
+    }
+    .lightbox-inner {
+      max-width: 1100px;
+      width: 100%;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+    }
+    .lightbox-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      background: #181818;
+      border-bottom: 1px solid #282828;
+      color: #fff;
+    }
+    .lightbox-title { font-weight: 600; font-size: 14px; }
+    .lightbox-close-btn {
+      background: transparent;
+      border: 0;
+      color: #aaa;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .lightbox-close-btn:hover { color: #fff; }
+    .lightbox-body {
+      padding: 16px;
+      overflow-y: auto;
+      text-align: center;
+      background: #000;
+    }
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 75vh;
+      object-fit: contain;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translate(-50%, 40px);
+      background: #18181b;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 99px;
+      font-size: 13.5px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .2s ease;
+      z-index: 1100;
+    }
+    .toast.show {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      aside {
+        position: static;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        padding: 16px;
+      }
+      nav { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+      nav a { white-space: nowrap; }
+      .trace-container, .bench-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- SIDEBAR NAVIGATION (NO BADGES, NO LOGO, STRICT MONOCHROME) -->
+  <aside>
+    <div class="brand-box">
+      <div class="brand-title">Гонки под контролем</div>
+      <div class="brand-sub">Банковские переводы · Ретунский С.</div>
+    </div>
+
+    <div class="nav-label">Разделы PDF</div>
+    <nav id="sidebarNav">
+      <a href="#sec1" class="active"><span class="num">01</span> 1. Постановка задачи</a>
+      <a href="#sec2"><span class="num">02</span> 2. Структура проекта</a>
+      <a href="#sec3"><span class="num">03</span> 3. Тесты (T1–T7)</a>
+      <a href="#sec4"><span class="num">04</span> 4. Файлы проекта</a>
+      <a href="#sec5"><span class="num">05</span> 5. Ход & Скриншоты</a>
+      <a href="#sec6"><span class="num">06</span> 6. Выводы & Анализ</a>
+      <a href="#sec7"><span class="num">07</span> 7. Вопросы для защиты</a>
+      <a href="#sec9"><span class="num">08</span> 9. Частые ошибки</a>
+      <a href="#sec10"><span class="num">09</span> 10. Порядок сдачи</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span>Группа 24140</span>
+      <span>Ubuntu / C</span>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- HERO STUDENT CARD -->
+    <header class="hero-banner">
+      <div class="sec-tag">Операционные системы · Лабораторный проект</div>
+      <h1>«Гонки под контролем» — банковские переводы</h1>
+      <p class="lead">
+        Исследование многопоточной синхронизации на языке C: от воспроизведения гонки данных (Race Condition) и взаимной блокировки (Deadlock) до корректного решения со строгим сохранением инварианта общей суммы.
+      </p>
+
+      <div class="student-grid">
+        <div class="student-item">
+          <small>Студент</small>
+          <b>Ретунский Савелий</b>
+        </div>
+        <div class="student-item">
+          <small>Группа</small>
+          <b>24140</b>
+        </div>
+        <div class="student-item">
+          <small>Окружение</small>
+          <b>Ubuntu 20.04.6 / GCC 10</b>
+        </div>
+        <div class="student-item">
+          <small>Инвариант суммы</small>
+          <b>100 000 ₽ (Сохранён)</b>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <!-- DIRECT DOCX DOWNLOAD BUTTON WITH SVG ICON -->
+        <a class="btn btn-primary" href="Ретунский_24140_bank_transfers.docx" download="Ретунский_24140_bank_transfers.docx" id="heroDocxBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Скачать отчёт .docx
+        </a>
+        <a class="btn btn-secondary" href="Ретунский_24140__bank.zip" download="Ретунский_24140__bank.zip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg>
+          Скачать архив .zip
+        </a>
+        <a class="btn btn-secondary" href="#sec5">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          Скриншоты S1–S8
+        </a>
+      </div>
+    </header>
+
+    <!-- SECTION 1: ПОСТАНОВКА ЗАДАЧИ -->
+    <section id="sec1">
+      <div class="sec-tag">Раздел 1 PDF</div>
+      <h2>1. Постановка задачи</h2>
+      <p class="lead">Цель, модель параллельных переводов, инвариант целостности и матрица привязки к лабораторным работам.</p>
+
+      <div class="card">
+        <h3>1.1. Цель проекта</h3>
+        <p style="color: var(--ink-secondary);">Разработать на языке C многопоточную программу, моделирующую банковскую систему переводов между счетами. Пройти путь от «сломанной» версии через deadlock к корректному решению, документируя каждый этап работы тестами, логами и скриншотами.</p>
+        
+        <h3 style="margin-top: 18px;">1.2. Модель банковской системы</h3>
+        <ul style="padding-left: 20px; color: var(--ink-secondary); margin-top: 6px;">
+          <li><b>N = 10</b> счетов с начальными балансами <code>INITIAL_BALANCE = 10 000</code> рублей (общая сумма 100 000 ₽).</li>
+          <li><b>M</b> параллельных потоков-клиентов (в базовом тесте 8, в стресс-тесте 16), каждый выполняет <b>K</b> переводов (1 000 или 10 000).</li>
+          <li><b>Операция перевода:</b> снять сумму X со счёта-источника from и зачислить X на счёт-получатель to.</li>
+          <li><b>Окно для гонки:</b> между снятием и зачислением поток может быть вытеснен планировщиком ОС.</li>
+        </ul>
+
+        <h3 style="margin-top: 18px;">1.3. Инвариант (главное требование)</h3>
+        <p style="color: var(--ink-secondary);">
+          Сумма всех балансов постоянна и строго равна <b>N × INITIAL_BALANCE = 100 000 ₽</b> в любой момент после завершения всех рабочих потоков. В корректной версии студента расхождение строго равно 0.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>1.4. Три версии реализации</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Версия</th><th>Файл</th><th>Что демонстрирует</th><th>Статус</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1. Сломанная</td><td><code>src/bank_broken.c</code></td><td>Операции без мьютексов, race condition — сумма «плывёт»</td><td><span class="badge bad">FAIL (S1)</span></td></tr>
+              <tr><td>2. Deadlock</td><td><code>src/bank_deadlock.c</code></td><td>Захват from/to, взаимная блокировка при встречных переводах</td><td><span class="badge warn">HANG (S2)</span></td></tr>
+              <tr><td>3. Корректная</td><td><code>src/bank_fixed.c</code></td><td>Единый глобальный порядок (lo &lt; hi), атомарность проверки</td><td><span class="badge ok">PASS (S4–S8)</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top: 20px;">1.5. Привязка к лабораторным работам</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>ЛБ</th><th>Отрабатываемые концепции и навыки</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>ЛБ1</b></td><td>Структуры, массивы счетов, указатели, пошаговая трассировка состояния памяти.</td></tr>
+              <tr><td><b>ЛБ2</b></td><td>Потоки POSIX (pthread), мьютексы, race condition, 4 условия Коффмана, диагностика deadlock.</td></tr>
+              <tr><td><b>ЛБ3</b></td><td>Критическая секция, изоляция разделяемых ресурсов, синхронизация Producer-Consumer.</td></tr>
+              <tr><td><b>ЛБ5</b></td><td>Динамическая память, Valgrind Memcheck (0 байт утечек), AddressSanitizer (ASan).</td></tr>
+              <tr><td><b>ЛБ6</b></td><td>Валидация граничных условий (проверка корректности индексов from/to до обращения к памяти).</td></tr>
+              <tr><td><b>ЛБ8</b></td><td>Масштабируемость многопоточного кода, измерение throughput (переводов/сек), профилирование.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: СТРУКТУРА ПРОЕКТА -->
+    <section id="sec2">
+      <div class="sec-tag">Раздел 2 PDF</div>
+      <h2>2. Структура проекта</h2>
+      <p class="lead">Иерархия каталогов и общесистемный контракт интерфейса <code>src/bank.h</code>.</p>
+
+      <div class="card">
+        <h3>Иерархия каталогов bank_transfers/</h3>
+        <div class="code-box">
+          <div class="code-top"><span>Дерево файлов</span><span>bash</span></div>
+          <pre>bank_transfers/
+├── src/
+│   ├── bank.h              # Единый заголовочный файл (интерфейс трёх версий)
+│   ├── bank_broken.c       # Версия 1: без синхронизации (гонка данных)
+│   ├── bank_deadlock.c     # Версия 2: с deadlock (встречные блокировки)
+│   └── bank_fixed.c        # Версия 3: корректное решение (единый порядок)
+├── tests/
+│   ├── test_bank.c         # Модульные и интеграционные тесты T1–T7
+│   └── test_t8.c           # Дополнительный статистический тест (100 запусков подряд)
+├── bench/
+│   └── bench_bank.c        # Замер производительности и пропускной способности (S8)
+├── build/                  # Скомпилированные бинарные файлы
+└── Makefile                # Автоматизация компиляции, диагностики и тестов</pre>
+        </div>
+
+        <h3 style="margin-top: 22px;">2.1. Контракт интерфейса src/bank.h</h3>
+        <ol style="padding-left: 20px; color: var(--ink-secondary); line-height: 1.7;">
+          <li>Функцию <code>bank_transfer</code> разрешено вызывать из любого количества потоков одновременно.</li>
+          <li>Возврат <code>0</code> — успешный перевод; возврат <code>-1</code> — недостаток средств или неверные индексы счетов.</li>
+          <li>После вызова <code>pthread_join</code> всех потоков выполняется равенство <code>bank_total() == NUM_ACCOUNTS × INITIAL_BALANCE</code>.</li>
+          <li>Функция <code>bank_transfer</code> не должна приводить к взаимной блокировке (deadlock).</li>
+          <li>Функция <code>bank_transfer</code> гарантирует отсутствие потери или дублирования средств при вытеснении потока.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- SECTION 3: ТЕСТЫ (T1-T7) -->
+    <section id="sec3">
+      <div class="sec-tag">Раздел 3 PDF</div>
+      <h2>3. Набор тестов (tests/test_bank.c)</h2>
+      <p class="lead">Чек-лист тестов T1–T7 и матрица ожидаемого/фактического поведения версий.</p>
+
+      <div class="card">
+        <h3>3.1. Чек-лист тестов</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>№</th><th>Тест</th><th>Что проверяет</th><th>Ожидаемый результат</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>T1</b></td><td>Инициализация</td><td>Все балансы равны <code>INITIAL_BALANCE</code></td><td><code>bank_total() == 100 000</code>, разница 0</td></tr>
+              <tr><td><b>T2</b></td><td>Один перевод A→B (100)</td><td>Корректность списания и зачисления</td><td>A = 9900, B = 10100, сумма 100 000</td></tr>
+              <tr><td><b>T3</b></td><td>1000 переводов (1 поток)</td><td>Последовательная работа без гонок</td><td>1000 успешных переводов, сумма 100 000</td></tr>
+              <tr><td><b>T4</b></td><td>8 потоков × 1000</td><td>Параллельная работа без взаимного влияния</td><td>Сумма строго 100 000 (в broken падает)</td></tr>
+              <tr><td><b>T5</b></td><td>Недостаток средств</td><td>Попытка перевода больше текущего баланса</td><td>Возврат <code>rc = -1</code>, балансы целы</td></tr>
+              <tr><td><b>T6</b></td><td>Перевод самому себе</td><td>Граничный случай <code>from == to</code></td><td>Возврат <code>rc = 0</code>, баланс не изменился</td></tr>
+              <tr><td><b>T7</b></td><td>Стресс: 16 × 10 000</td><td>Высокая нагрузка 16 потоков</td><td>Сумма 100 000, время выполнения &lt; 30 с</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top: 22px;">3.2. Матрица поведения версий из задания</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Версия</th><th>T1</th><th>T2</th><th>T3</th><th>T4</th><th>T5</th><th>T6</th><th>T7</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>bank_broken</b></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge bad">FAIL</span></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge bad">FAIL</span></td></tr>
+              <tr><td><b>bank_deadlock</b></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge warn">HANG</span></td><td><span class="badge">—</span></td><td><span class="badge">—</span></td><td><span class="badge">—</span></td></tr>
+              <tr><td><b>bank_fixed</b></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td><td><span class="badge ok">OK</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: ФАЙЛЫ ПРОЕКТА -->
+    <section id="sec4">
+      <div class="sec-tag">Раздел 4 PDF</div>
+      <h2>4. Файлы проекта и листинги исходного кода</h2>
+      <p class="lead">Все исходные тексты проекта с подсветкой синтаксиса и комментариями.</p>
+
+      <div class="card">
+        <div class="tabs-header" id="codeTabs">
+          <button class="tab-btn active" data-file="fixed" type="button">src/bank_fixed.c</button>
+          <button class="tab-btn" data-file="broken" type="button">src/bank_broken.c</button>
+          <button class="tab-btn" data-file="deadlock" type="button">src/bank_deadlock.c</button>
+          <button class="tab-btn" data-file="header" type="button">src/bank.h</button>
+          <button class="tab-btn" data-file="tests" type="button">tests/test_bank.c</button>
+          <button class="tab-btn" data-file="bench" type="button">bench/bench_bank.c</button>
+          <button class="tab-btn" data-file="t8" type="button">tests/test_t8.c</button>
+          <button class="tab-btn" data-file="makefile" type="button">Makefile</button>
+        </div>
+
+        <div class="code-box">
+          <div class="code-top">
+            <span id="codeFilePath">src/bank_fixed.c — Корректная версия (единый порядок)</span>
+            <button class="copy-btn" id="copyCodeBtn" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Скопировать код
+            </button>
+          </div>
+          <pre id="codeDisplay"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: ХОД ВЫПОЛНЕНИЯ И СКРИНШОТЫ (NO PLASHKI, ANIMATED TYPEWRITER TEXT) -->
+    <section id="sec5">
+      <div class="sec-tag">Раздел 5 PDF</div>
+      <h2>5. Ход выполнения и доказательства на скриншотах</h2>
+      <p class="lead">Скриншоты встроены строго по ходу решения задачи, с терминальными командами и описанием вывода. Нажмите на скриншот для увеличения.</p>
+
+      <!-- ШАГ 0: ПОДГОТОВКА И СТРУКТУРА -->
+      <div class="step-block">
+        <div class="step-eyebrow typewriter-text" data-text="00 / ПОДГОТОВКА ОКРУЖЕНИЯ И СТРУКТУРА ПРОЕКТА"></div>
+        <div class="step-title">Подготовка среды Linux, создание структуры и сборка</div>
+        <p class="step-desc">
+          В виртуальной машине Ubuntu 20.04.6 LTS обновлены системные пакеты, установлен набор <code>build-essential</code>, <code>valgrind</code>, <code>gdb</code>. Проверено число ядер процессора: <code>nproc = 4</code>.
+        </p>
+
+        <div class="cmd-box">
+          <span>sudo apt update && sudo apt install -y build-essential valgrind gdb && nproc</span>
+        </div>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig01_env_prep.jpg', 'Рис 1. Подготовка пакетов и рабочего каталога bank_transfers')">
+            <span class="zoom-hint">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              Увеличить
+            </span>
+            <img src="screenshots/fig01_env_prep.jpg" alt="Рис 1. Подготовка среды" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Рисунок 1. Подготовка пакетов и создание рабочего каталога bank_transfers.</b>
+            <span>Проверка nproc (4 ядра), установка компилятора gcc и базовых утилит Linux.</span>
+          </figcaption>
+        </figure>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig02_project_structure.jpg', 'Рис 2. Создание файлов проекта и проверка структуры ls -R')">
+            <span class="zoom-hint">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              Увеличить
+            </span>
+            <img src="screenshots/fig02_project_structure.jpg" alt="Рис 2. Структура проекта" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Рисунок 2. Файлы исходного кода, тестов и Makefile созданы; структура каталогов проверена.</b>
+            <span>Команда ls -R подтверждает корректное наполнение каталогов src, tests, bench.</span>
+          </figcaption>
+        </figure>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig03_build_cat_eof_fix.jpg', 'Рис 3. Устранение служебных строк cat/EOF через sed и успешная сборка')">
+            <span class="zoom-hint">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              Увеличить
+            </span>
+            <img src="screenshots/fig03_build_cat_eof_fix.jpg" alt="Рис 3. Исправление cat EOF" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Рисунок 3. Ошибки сборки из-за строк cat/EOF и исправление через sed.</b>
+            <span>Устранение артефактов вставки sed -i, чистая сборка make clean; make без единого предупреждения (S11).</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <!-- ШАГ 1: ГОНКА В BANK_BROKEN -->
+      <div class="step-block">
+        <div class="step-eyebrow typewriter-text" data-text="01 / ВОСПРОИЗВЕДЕНИЕ СОСТОЯНИЯ ГОНКИ · BANK_BROKEN"></div>
+        <div class="step-title">Воспроизведение состояния гонки (Race Condition) в bank_broken.c</div>
+        <p class="step-desc">
+          В сломанной версии <code>src/bank_broken.c</code> отсутствуют мьютексы. Проверка <code>balance &lt; amount</code> и операции модификации балансов не атомарны. При 5 повторных запусках инвариант суммы каждый раз нарушается (разница: -3828, +6601 и др.).
+        </p>
+
+        <div class="cmd-box">
+          <span>make run-broken</span>
+        </div>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig06_s1_bank_broken_races.png', 'Скриншот S1. 5 запусков bank_broken — гонка данных и нарушение суммы')">
+            <span class="zoom-hint">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              Увеличить
+            </span>
+            <img src="screenshots/fig06_s1_bank_broken_races.png" alt="Скриншот S1. Гонка данных" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Скриншот S1 · «Гонка: сумма балансов плывёт (ЛБ2)».</b>
+            <span>5 последовательных запусков: в T4 и T7 фиксируются строки [FAIL], итоговая сумма отличается от 100 000 на разные величины в каждом запуске.</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <!-- ШАГ 2: DEADLOCK -->
+      <div class="step-block">
+        <div class="step-eyebrow typewriter-text" data-text="02 / ВЗАИМНАЯ БЛОКИРОВКА · BANK_DEADLOCK"></div>
+        <div class="step-title">Воспроизведение и диагностика взаимной блокировки (Deadlock)</div>
+        <p class="step-desc">
+          В версии <code>src/bank_deadlock.c</code> мьютексы захватываются в порядке from → to. При встречных параллельных переводах возникает цикл в графе ожидания ресурсов (выполняются все 4 условия Коффмана). Программа намертво зависает на тесте T4.
+        </p>
+
+        <div class="cmd-box">
+          <span>timeout 30 ./build/test_deadlock; echo "Exit code: $?"</span>
+        </div>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig07_bank_deadlock_t4_hang.jpg', 'Рис 7. Зависание test_deadlock на тесте T4')">
+            <span class="zoom-hint">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              Увеличить
+            </span>
+            <img src="screenshots/fig07_bank_deadlock_t4_hang.jpg" alt="Рис 7. Зависание T4" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Рисунок 7. Тесты успешно доходят до T4 и намертво зависают при параллельных переводах.</b>
+            <span>T1, T2, T3 завершились успешно; 8 параллельных потоков заблокировали друг друга.</span>
+          </figcaption>
+        </figure>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig09_s2_timeout_124.png', 'Скриншот S2. Завершение test_deadlock по тайм-ауту 30с с кодом 124')">
+            <span class="zoom-hint">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              Увеличить
+            </span>
+            <img src="screenshots/fig09_s2_timeout_124.png" alt="Скриншот S2. Timeout 124" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Скриншот S2 · «Deadlock при встречных переводах (ЛБ2)».</b>
+            <span>Автоматическое завершение процесса утилитой timeout 30s; код возврата 124 подтверждает зависание.</span>
+          </figcaption>
+        </figure>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0;">
+          <figure class="screenshot-figure" style="margin: 0;">
+            <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig11_s3_top_cpu_zero.jpg', 'Скриншот S3. Состояние потоков в top во время deadlock (CPU ~0%)')">
+              <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+              <img src="screenshots/fig11_s3_top_cpu_zero.jpg" alt="Скриншот S3. top CPU 0" loading="lazy">
+            </div>
+            <figcaption class="screenshot-caption">
+              <b>Скриншот S3 · «Состояние потоков при deadlock».</b>
+              <span>Утилита top -H: 9 потоков в состоянии сна 'S', загрузка CPU = 0.0%.</span>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot-figure" style="margin: 0;">
+            <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig12_s10_gdb_deadlock_backtrace.jpg', 'Скриншот S10. Стек вызовов GDB thread apply all bt')">
+              <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+              <img src="screenshots/fig12_s10_gdb_deadlock_backtrace.jpg" alt="Скриншот S10. GDB backtrace" loading="lazy">
+            </div>
+            <figcaption class="screenshot-caption">
+              <b>Скриншот S10 · «Стек потоков при deadlock».</b>
+              <span>GDB: вызовы застряли внутри системного вызова __lll_lock_wait.</span>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <!-- ШАГ 3: КОРРЕКТНАЯ ВЕРСИЯ -->
+      <div class="step-block">
+        <div class="step-eyebrow typewriter-text" data-text="03 / КОРРЕКТНОЕ РЕШЕНИЕ · BANK_FIXED"></div>
+        <div class="step-title">Корректное решение (bank_fixed.c): тесты, TSan, Valgrind, стресс</div>
+        <p class="step-desc">
+          В корректной версии <code>src/bank_fixed.c</code> захват мьютексов упорядочен: сначала блокируется счёт с меньшим индексом <code>lo = min(from, to)</code>, затем с большим <code>hi = max(from, to)</code>. Проверка баланса и операция перемещения средств выполняются строго внутри критической секции.
+        </p>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig17_s9_bank_fixed_listing.jpg', 'Скриншот S9. Листинг bank_fixed.c с единым порядком захвата')">
+            <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+            <img src="screenshots/fig17_s9_bank_fixed_listing.jpg" alt="Скриншот S9. Листинг bank_fixed" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Скриншот S9 · «Ключевое решение: единый порядок».</b>
+            <span>Исходный код bank_transfer: строки сортировки индексов lo/hi, два вызова lock, проверка и разблокировка.</span>
+          </figcaption>
+        </figure>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig04_s4_test_fixed_passed.jpg', 'Скриншот S4. Запуск make test — все тесты T1-T7 успешно пройдены')">
+            <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+            <img src="screenshots/fig04_s4_test_fixed_passed.jpg" alt="Скриншот S4. ALL TESTS PASSED" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Скриншот S4 · «Корректная версия: инвариант сохранён».</b>
+            <span>Все проверки T1–T7 получили статус [OK], выведено === ALL TESTS PASSED ===, код возврата: 0.</span>
+          </figcaption>
+        </figure>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0;">
+          <figure class="screenshot-figure" style="margin: 0;">
+            <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig13_s5_tsan_gcc10_clean.jpg', 'Скриншот S5. ThreadSanitizer на GCC 10 — 0 гонок данных')">
+              <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+              <img src="screenshots/fig13_s5_tsan_gcc10_clean.jpg" alt="Скриншот S5. TSan clean" loading="lazy">
+            </div>
+            <figcaption class="screenshot-caption">
+              <b>Скриншот S5 · «Гонок данных нет».</b>
+              <span>Сборка с флагом -fsanitize=thread на GCC 10: 0 предупреждений data race, exit code 0.</span>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot-figure" style="margin: 0;">
+            <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig14_s6_valgrind_zero_leaks.jpg', 'Скриншот S6. Valgrind Memcheck — 0 утечек памяти')">
+              <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+              <img src="screenshots/fig14_s6_valgrind_zero_leaks.jpg" alt="Скриншот S6. Valgrind 0 leaks" loading="lazy">
+            </div>
+            <figcaption class="screenshot-caption">
+              <b>Скриншот S6 · «Утечек нет (ЛБ5)».</b>
+              <span>Проверка Valgrind: definitely lost: 0 bytes in 0 blocks, ERROR SUMMARY: 0 errors.</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig15_s7_timeout60_stress_passed.jpg', 'Скриншот S7. Стресс-тест 16 потоков x 10 000 операций')">
+            <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+            <img src="screenshots/fig15_s7_timeout60_stress_passed.jpg" alt="Скриншот S7. Стресс-тест пройден" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Скриншот S7 · «Стресс-тест 16×10 000 пройден».</b>
+            <span>Команда timeout 60 ./build/test_fixed: T7 [OK], время выполнения существенно меньше лимита 30 секунд, код 0.</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <!-- ШАГ 4: ПРОИЗВОДИТЕЛЬНОСТЬ -->
+      <div class="step-block">
+        <div class="step-eyebrow typewriter-text" data-text="04 / МАСШТАБИРУЕМОСТЬ И ПРОИЗВОДИТЕЛЬНОСТЬ · S8"></div>
+        <div class="step-title">Замер производительности и масштабирование (bench_bank.c)</div>
+        <p class="step-desc">
+          Проведено профилирование пропускной способности системы на 1, 2, 4, 8 и 16 рабочих потоках с объёмом по 10 000 переводов на поток. Во всех замерах итоговая сумма осталась строго корректной (<code>total_ok=YES</code>).
+        </p>
+
+        <div class="cmd-box">
+          <span>make bench-all</span>
+        </div>
+
+        <figure class="screenshot-figure">
+          <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig16_s8_bench_all_threads.jpg', 'Скриншот S8. Замер производительности bench-all для 1, 2, 4, 8, 16 потоков')">
+            <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+            <img src="screenshots/fig16_s8_bench_all_threads.jpg" alt="Скриншот S8. Производительность" loading="lazy">
+          </div>
+          <figcaption class="screenshot-caption">
+            <b>Скриншот S8 · «Масштабирование переводов».</b>
+            <span>Результаты: рост throughput до 28.75 млн переводов/с при 4 потоках, последующее насыщение из-за конкуренции за мьютексы.</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <!-- ШАГ 5: ТЕСТ T8 -->
+      <div class="step-block">
+        <div class="step-eyebrow typewriter-text" data-text="05 / СТАТИСТИЧЕСКИЙ ЭКСПЕРИМЕНТ · ТЕСТ T8"></div>
+        <div class="step-title">Дополнительный эксперимент T8: 100 повторных запусков подряд</div>
+        <p class="step-desc">
+          Тестовая утилита <code>tests/test_t8.c</code> прогоняет 100 независимых сессий по 8 потоков × 1000 переводов. В сломанной версии инвариант нарушился в 100 из 100 запусков (из-за расширенного окна гонки). В корректной версии — 0 нарушений из 100.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <figure class="screenshot-figure" style="margin: 0;">
+            <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig18_t8_broken_100_runs.png', 'Рис 18. T8 для broken — 100 нарушений из 100')">
+              <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+              <img src="screenshots/fig18_t8_broken_100_runs.png" alt="Рис 18. T8 broken" loading="lazy">
+            </div>
+            <figcaption class="screenshot-caption">
+              <b>Рисунок 18. bank_broken в T8: 100 нарушений из 100.</b>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot-figure" style="margin: 0;">
+            <div class="screenshot-img-wrap" onclick="openLightbox('screenshots/fig19_t8_comparison_broken_vs_fixed.png', 'Рис 19. Сравнение T8 broken vs fixed')">
+              <span class="zoom-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Увеличить</span>
+              <img src="screenshots/fig19_t8_comparison_broken_vs_fixed.png" alt="Рис 19. T8 сравнение" loading="lazy">
+            </div>
+            <figcaption class="screenshot-caption">
+              <b>Рисунок 19. Сравнение T8: broken = 100/100, fixed = 0/100.</b>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: ВЫВОДЫ И АНАЛИЗ (COLLAPSIBLE ACCORDION SECTIONS) -->
+    <section id="sec6">
+      <div class="sec-tag">Раздел 6 PDF</div>
+      <h2>6. Аналитические выводы</h2>
+      <p class="lead">Глубокий теоретический и практический разбор причин гонки, взаимной блокировки и эффективности решения. Нажмите на любой раздел, чтобы развернуть или свернуть подробности.</p>
+
+      <!-- 6.1.1 АНАЛИЗ ГОНКИ -->
+      <details class="accordion-item" open>
+        <summary>
+          <span>6.1.1. Анализ гонки (Версия 1: bank_broken.c)</span>
+          <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <div class="accordion-content">
+          <p><b>Что произошло:</b> Итоговая сумма балансов после многопоточных тестов T4 и T7 не равна 100 000 и непредсказуемо меняется от запуска к запуску (например, 96 172 и 106 601 на скриншоте S1).</p>
+          <p style="margin-top: 8px;"><b>Причина:</b> Проверка <code>src->balance &lt; amount</code> и последующая модификация балансов <code>src->balance -= amount</code> / <code>dst->balance += amount</code> не являются атомарными операциями. На машинном уровне вычитание состоит минимум из 3 инструкций: чтение переменной из памяти в регистр (LOAD), модификация регистра (SUB) и запись обратно в память (STORE). Если поток 1 вытеснен после LOAD, а поток 2 успевает изменить баланс, запись потока 1 затрёт результат потока 2 (Lost Update).</p>
+          <p style="margin-top: 8px;"><b>Следствия:</b> Балансы могут становиться отрицательными вопреки проверке, деньги безвозвратно теряются или дублируются из воздуха.</p>
+        </div>
+      </details>
+
+      <!-- 6.1.2 АНАЛИЗ DEADLOCK И КОФФМАН -->
+      <details class="accordion-item" open>
+        <summary>
+          <span>6.1.2. Анализ взаимной блокировки (Версия 2: bank_deadlock.c)</span>
+          <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <div class="accordion-content">
+          <p><b>Что произошло:</b> Программа зависает на тесте T4. Утилита <code>timeout 30</code> завершает её с кодом 124. Диагностика в <code>top</code> показывает нагрузку CPU ≈ 0.0%, а трассировка <code>GDB</code> показывает остановку всех потоков на системном вызове <code>pthread_mutex_lock</code>.</p>
+          <p style="margin-top: 8px;">В версии <code>bank_deadlock.c</code> одновременно выполняются <b>все четыре условия Коффмана</b>:</p>
+          <ul style="padding-left: 20px; margin-top: 6px;">
+            <li><b>1. Взаимное исключение:</b> Каждый мьютекс счёта (mtx) может находиться во владении только одного потока одновременно.</li>
+            <li><b>2. Удержание и ожидание:</b> Поток захватывает мьютекс счёта <code>from</code> и, удерживая его, пытается захватить мьютекс <code>to</code>.</li>
+            <li><b>3. Отсутствие вытеснения:</b> Захваченный мьютекс нельзя отобрать силой; он освобождается только самим владельцем через unlock.</li>
+            <li><b>4. Циклическое ожидание:</b> Поток 1 (A→B) удерживает A и ждёт B; Поток 2 (B→A) удерживает B и ждёт A. Замкнутый цикл ожидания.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 6.1.3 АНАЛИЗ РЕШЕНИЯ -->
+      <details class="accordion-item" open>
+        <summary>
+          <span>6.1.3. Анализ решения (Версия 3: bank_fixed.c)</span>
+          <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <div class="accordion-content">
+          <p><b>Архитектурное решение:</b> Введение глобального линейного порядка блокировки ресурсов. Вместо порядка вызова (from → to) программа всегда сначала блокирует счёт с меньшим индексом <code>lo = min(from, to)</code>, а затем с большим <code>hi = max(from, to)</code>.</p>
+          <p style="margin-top: 8px;"><b>Разрушение цикла Коффмана:</b> Поскольку все потоки захватывают ресурсы строго в порядке возрастания индексов счетов, ситуация, когда поток держит старший индекс и пытается захватить младший, исключена. Граф владения ресурсами является ациклическим (DAG), поэтому <b>deadlock невозможен</b>.</p>
+          <p style="margin-top: 8px;"><b>Защита от TOCTOU:</b> Проверка баланса <code>src->balance &lt; amount</code> вынесена строго внутрь критической секции после захвата обоих мьютексов.</p>
+        </div>
+      </details>
+
+      <!-- 6.1.4 ИНТЕРАКТИВНАЯ ТРАССИРОВКА ПЕРЕВОДА -->
+      <details class="accordion-item" open>
+        <summary>
+          <span>6.1.4. Трассировка одного перевода A → B (ЛБ1)</span>
+          <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <div class="accordion-content">
+          <p style="font-size: 13.5px; color: var(--ink-secondary); margin-bottom: 12px;">
+            Интерактивная модель выполнения перевода 100 со счёта A (0) на счёт B (1) при начальных балансах 10 000 ₽.
+          </p>
+
+          <div class="trace-container">
+            <div class="trace-visual">
+              <div class="accounts-row">
+                <div class="account-card" id="cardA">
+                  <div class="acc-header">
+                    <span>Счёт A (Индекс 0)</span>
+                    <span class="acc-lock-status" id="lockStatusA">Свободен</span>
+                  </div>
+                  <div class="acc-balance" id="traceBalA">10&nbsp;000</div>
+                  <div style="font-size: 11.5px; color: var(--ink-tertiary); margin-top: 2px;">Баланс в рублях</div>
+                </div>
+
+                <div class="account-card" id="cardB">
+                  <div class="acc-header">
+                    <span>Счёт B (Индекс 1)</span>
+                    <span class="acc-lock-status" id="lockStatusB">Свободен</span>
+                  </div>
+                  <div class="acc-balance" id="traceBalB">10&nbsp;000</div>
+                  <div style="font-size: 11.5px; color: var(--ink-tertiary); margin-top: 2px;">Баланс в рублях</div>
+                </div>
+              </div>
+
+              <div class="sum-indicator" id="traceSumInd">
+                <div>
+                  <span id="traceSumStatus">Инвариант суммы сохранён</span>
+                  <small style="display: block; font-size: 11px; color: var(--ink-tertiary);" id="traceSumDesc">Внешние наблюдатели видят целостное состояние</small>
+                </div>
+                <div class="sum-num" id="traceSumVal">20&nbsp;000&nbsp;₽</div>
+              </div>
+
+              <div class="trace-controls">
+                <button class="btn btn-secondary btn-sm" id="tracePrevBtn" type="button">← Назад</button>
+                <button class="btn btn-primary btn-sm" id="traceNextBtn" type="button">Дальше →</button>
+                <button class="btn btn-secondary btn-sm" id="tracePlayBtn" type="button">Автопоказ</button>
+              </div>
+            </div>
+
+            <div class="trace-steps-panel">
+              <ol class="trace-steps-list" id="traceStepList">
+                <li class="trace-step-item active" data-step="0"><span class="step-idx">0</span><div><b>Начало:</b> Счета не заблокированы, сумма 20 000 ₽</div></li>
+                <li class="trace-step-item" data-step="1"><span class="step-idx">1</span><div><b>lock(A):</b> Захват счёта 0 (младший индекс lo=0)</div></li>
+                <li class="trace-step-item" data-step="2"><span class="step-idx">2</span><div><b>lock(B):</b> Захват счёта 1 (старший индекс hi=1)</div></li>
+                <li class="trace-step-item" data-step="3"><span class="step-idx">3</span><div><b>Проверка баланса:</b> 10 000 ≥ 100 — условие истинно</div></li>
+                <li class="trace-step-item" data-step="4"><span class="step-idx">4</span><div><b>A −= 100:</b> Списание (сумма временно 19 900 ₽, деньги «в полёте»)</div></li>
+                <li class="trace-step-item" data-step="5"><span class="step-idx">5</span><div><b>B += 100:</b> Зачисление (сумма восстановлена до 20 000 ₽)</div></li>
+                <li class="trace-step-item" data-step="6"><span class="step-idx">6</span><div><b>unlock(B):</b> Освобождение счёта 1</div></li>
+                <li class="trace-step-item" data-step="7"><span class="step-idx">7</span><div><b>unlock(A):</b> Освобождение счёта 0 — перевод завершён</div></li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <!-- 6.1.5 ПРОИЗВОДИТЕЛЬНОСТЬ S8 -->
+      <details class="accordion-item" open>
+        <summary>
+          <span>6.1.5. Производительность и масштабируемость (S8)</span>
+          <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <div class="accordion-content">
+          <p style="font-size: 13.5px; color: var(--ink-secondary); margin-bottom: 12px;">
+            Реальные замеры производительности из <code>bench_bank.c</code> на 4-ядерном процессоре виртуальной машины:
+          </p>
+
+          <div class="bench-grid">
+            <div class="table-wrap" style="margin: 0;">
+              <table>
+                <thead>
+                  <tr><th>Потоки</th><th>Время (мс)</th><th>Переводов / сек</th><th>Инвариант</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>1 поток</td><td>0.76 мс</td><td>13 135 047</td><td><span class="badge ok">YES</span></td></tr>
+                  <tr><td>2 потока</td><td>0.73 мс</td><td>27 529 477</td><td><span class="badge ok">YES</span></td></tr>
+                  <tr style="background: var(--surface-hover);"><td><b>4 потока (Пик)</b></td><td><b>1.39 мс</b></td><td><b>28 751 040</b></td><td><span class="badge ok">YES</span></td></tr>
+                  <tr><td>8 потоков</td><td>3.28 мс</td><td>24 360 558</td><td><span class="badge ok">YES</span></td></tr>
+                  <tr><td>16 потоков</td><td>5.83 мс</td><td>27 432 053</td><td><span class="badge ok">YES</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="chart-container" id="benchChart">
+              <div class="chart-col"><span class="col-val">13.1M</span><div class="col-bar" style="height: 45%;"></div><span>1 пот.</span></div>
+              <div class="chart-col"><span class="col-val">27.5M</span><div class="col-bar" style="height: 95%;"></div><span>2 пот.</span></div>
+              <div class="chart-col"><span class="col-val" style="font-weight:800;">28.8M</span><div class="col-bar" style="height: 100%;"></div><span style="font-weight:700;">4 пот.</span></div>
+              <div class="chart-col"><span class="col-val">24.4M</span><div class="col-bar" style="height: 84%;"></div><span>8 пот.</span></div>
+              <div class="chart-col"><span class="col-val">27.4M</span><div class="col-bar" style="height: 94%;"></div><span>16 пот.</span></div>
+            </div>
+          </div>
+
+          <p style="margin-top: 14px; color: var(--ink-secondary); font-size: 13.5px;">
+            <b>Вывод:</b> До 4 потоков пропускная способность растёт пропорционально числу ядер. При 8 и 16 потоках прирост прекращается из-за lock contention (конкуренции за 10 мьютексов счетов), cache-line bouncing (перемещения строк кэша между ядрами) и затрат на переключение контекста.
+          </p>
+        </div>
+      </details>
+
+      <!-- 6.1.6 ОБЩИЙ ВЫВОД -->
+      <details class="accordion-item" open>
+        <summary>
+          <span>6.1.6. Общий вывод и академическая строгость (Раздел 6.2)</span>
+          <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <div class="accordion-content">
+          <p>Инвариант постоянства суммы — главный критерий корректности. Применение мьютексов само по себе создаёт риск дедлока, если отсутствует дисциплина упорядочивания. Единый глобальный порядок захвата мьютексов исключает циклы в графе ожидания. В отчёте отсутствуют голословные фразы «программа работает» (все выводы подкреплены числами), дедлок разобран через 4 условия Коффмана, а влияние блокировок подтверждено замером S8.</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- SECTION 7: ВОПРОСЫ ДЛЯ ЗАЩИТЫ (COLLAPSIBLE GROUPS & QUESTIONS) -->
+    <section id="sec7">
+      <div class="sec-tag">Раздел 7 PDF</div>
+      <h2>7. Ответы на вопросы для отчёта и защиты</h2>
+      <p class="lead">Все 22 контрольных вопроса структурированы по подразделам с возможностью сворачивания и разворачивания.</p>
+
+      <div class="card">
+        <h3>7.1. Теоретические вопросы (1–10)</h3>
+        
+        <details class="accordion-item" style="margin-top: 10px;">
+          <summary><span>1. Что такое race condition? Приведите пример из проекта.</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            <b>Race condition (состояние гонки)</b> — ошибка конкурентного доступа, при которой результат работы программы зависит от непредсказуемого порядка планирования потоков. В <code>src/bank_broken.c</code> потоки читают баланс счёта, проверяют его и уменьшают без синхронизации. Если два потока прочитали начальный баланс 10 000 одновременно, оба списывают средства, перетирая запись друг друга, и баланс уменьшается лишь на одну транзакцию вместо двух (Lost Update).
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>2. Почему counter++ и balance -= amount не атомарны? Из каких шагов они состоят?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Они состоят из трёх машинных микрокоманд: LOAD (чтение значения из памяти в регистр ЦП), SUB/ADD (модификация значения в регистре ALU), STORE (запись из регистра обратно в память). Если между LOAD и STORE операционная система переключит контекст на другой поток, работающий с той же переменной, произойдёт потеря обновления.
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>3. Перечислите четыре условия Коффмана. Какие из них выполняются в bank_deadlock.c?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            1) Взаимное исключение; 2) Удержание и ожидание; 3) Отсутствие принудительного вытеснения; 4) Циклическое ожидание. В <code>bank_deadlock.c</code> <b>выполняются одновременно все 4 условия</b>, что делает возникновение взаимной блокировки гарантированным при наличии встречных потоков (A→B и B→A).
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>4. В чём различие между deadlock и starvation?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            При <b>deadlock (взаимной блокировке)</b> группа потоков находится в состоянии циклического ожидания ресурсов, удерживаемых ими же самими. Прогресс в этой группе невозможен в принципе.<br>
+            При <b>starvation (голодании)</b> система в целом функционирует и совершает работу, но конкретный поток не получает доступ к ресурсу из-за нечестной дисциплины планирования или постоянного опережения другими потоками.
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>5. Почему единый порядок захвата мьютексов устраняет deadlock?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Когда все потоки запрашивают мьютексы строго по возрастанию индекса счёта (lo &lt; hi), в графе владения ресурсами невозможно построить обратную дугу. Граф становится строго ациклическим (DAG), что исключает 4-е условие Коффмана (циклическое ожидание).
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>6. Что такое TOCTOU? Где он возникает при выносе проверки баланса?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            <b>TOCTOU (Time-of-Check to Time-of-Use)</b> — класс ошибок согласованности, при которых состояние ресурса изменяется между моментом проверки (Check) и моментом использования (Use). Если проверить <code>if (src->balance >= amount)</code> ДО захвата мьютексов, сторонний поток успеет снять деньги между проверкой и списанием, и баланс уйдёт в минус.
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>7. Почему from == to требует отдельной обработки?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Без проверки <code>if (from == to) return 0;</code> поток попытается дважды захватить один и тот же мьютекс <code>pthread_mutex_t</code> (по умолчанию нерекурсивный <code>PTHREAD_MUTEX_NORMAL</code>) и заблокирует сам себя на втором вызове lock.
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>8. Чем pthread_mutex_lock отличается от pthread_mutex_trylock?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            <code>pthread_mutex_lock</code> блокирует вызывающий поток и переводит его в сон до момента освобождения мьютекса.<br>
+            <code>pthread_mutex_trylock</code> является неблокирующим вызовом: если мьютекс свободен, он захватывается (возврат 0); если занят — немедленно возвращает ошибку <code>EBUSY</code>, не усыпляя поток.
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>9. Что такое lock convoy? Как он проявляется при 16 потоках в S8?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            <b>Lock convoy (конвой блокировок)</b> — деградация производительности, при которой множество потоков с равным приоритетом выстраиваются в очередь за одним и тем же часто освобождающимся мьютексом, тратя время на context switches и пробуждения ядра. В S8 при 16 потоках на 10 счетов пропускная способность перестаёт расти из-за очередей к мьютексам.
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>10. Почему bank_total() вызывается только после join всех потоков?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Функция <code>bank_total()</code> суммирует балансы без блокировки всех 10 счетов. Вызов её во время работы потоков сам создаст состояние гонки и вернёт промежуточную сумму («деньги в полёте»). Вызов после <code>join</code> гарантирует статичность всех счетов.
+          </div>
+        </details>
+
+        <h3 style="margin-top: 26px;">7.2. Практические вопросы и фрагменты кода</h3>
+        
+        <details class="accordion-item" style="margin-top: 10px;">
+          <summary><span>1. Что произойдет, если в bank_fixed.c изменить порядок захвата на «сначала from, потом to»?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Реализация вернётся к поведению <code>bank_deadlock.c</code>. При параллельных встречных переводах возникнет взаимная блокировка и зависание тестов T4 и T7 по тайм-ауту 124.
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>2. Как избежать deadlock через pthread_mutex_trylock без сортировки индексов?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Паттерн освобождения первого ресурса при неудачном захвате второго с уступкой процессора:
+            <div class="code-box" style="margin-top: 8px;">
+              <pre>int bank_transfer_trylock(bank_t* b, int from, int to, long long amt) {
+    if (from == to) return 0;
+    account_t *src = &b->accounts[from], *dst = &b->accounts[to];
+    for (;;) {
+        pthread_mutex_lock(&src->mtx);
+        if (pthread_mutex_trylock(&dst->mtx) == 0) break; // Успех
+        pthread_mutex_unlock(&src->mtx);                 // Сброс первого
+        sched_yield();                                   // Уступаем ЦП
+    }
+    int rc = (src->balance >= amt) ? (src->balance -= amt, dst->balance += amt, 0) : -1;
+    pthread_mutex_unlock(&dst->mtx);
+    pthread_mutex_unlock(&src->mtx);
+    return rc;
+}</pre>
+            </div>
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>3. Реализация функции безопасного снимка балансов bank_snapshot()</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Для атомарного снимка всех счетов без дедлока мьютексы захватываются строго по возрастанию индекса от 0 до N-1:
+            <div class="code-box" style="margin-top: 8px;">
+              <pre>void bank_snapshot(bank_t* bank, long long out[NUM_ACCOUNTS]) {
+    int n = bank->num_accounts;
+    for (int i = 0; i < n; i++) pthread_mutex_lock(&bank->accounts[i].mtx);
+    for (int i = 0; i < n; i++) out[i] = bank->accounts[i].balance;
+    for (int i = n - 1; i >= 0; i--) pthread_mutex_unlock(&bank->accounts[i].mtx);
+}</pre>
+            </div>
+          </div>
+        </details>
+
+        <h3 style="margin-top: 26px;">7.3. Вопросы «на подумать»</h3>
+        
+        <details class="accordion-item" style="margin-top: 10px;">
+          <summary><span>1. В реальном банке перевод — это транзакция. Как сделать откат (rollback)?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Списание и зачисление объединяются под общими мьютексами. При сбое восстанавливается balance источника до unlock. В распределённых СУБД применяется двухфазный коммит (2PC) и упреждающий журнал транзакций (WAL).
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>2. 1 000 000 счетов и 16 потоков: один глобальный мьютекс или мьютекс на каждый счёт?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Мьютекс на каждый счёт эффективнее: при 1 000 000 счетов вероятность коллизии потоков менее 0.001%, переводы исполняются параллельно на всех ядрах. Глобальный мьютекс превратит систему в однопоточное «бутылочное горлышко».
+          </div>
+        </details>
+
+        <details class="accordion-item">
+          <summary><span>3. Почему from и to проверяются до захвата мьютексов?</span><svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></summary>
+          <div class="accordion-content">
+            Чтобы исключить обращение за границы массива (Out-of-bounds) и попытку вызвать <code>pthread_mutex_lock</code> по невалидному указателю, вызывающему крах программы (Segmentation Fault).
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- SECTION 9: ЧАСТЫЕ ОШИБКИ -->
+    <section id="sec9">
+      <div class="sec-tag">Раздел 9 PDF</div>
+      <h2>9. Чек-лист частых ошибок (Предотвращены в проекте)</h2>
+      <p class="lead">Верификация работы по списку типичных дефектов из раздела 9 PDF:</p>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Типичная ошибка студентов</th><th>Как решено в моём проекте</th><th>Статус</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1. Версия 3 без единого порядка («иногда проходит»)</td><td>Глобальный порядок <code>lo &lt; hi</code>, проверен стресс-тестом T7 (160 000 переводов)</td><td><span class="badge status-ok">OK</span></td></tr>
+              <tr><td>2. Захват без unlock при ошибке return -1</td><td>unlock выполняется всегда в конце функции до возврата</td><td><span class="badge status-ok">OK</span></td></tr>
+              <tr><td>3. Проверка баланса вне критической секции (TOCTOU)</td><td>Проверка баланса находится строго внутри критической секции под обоими мьютексами</td><td><span class="badge status-ok">OK</span></td></tr>
+              <tr><td>4. from == to без обработки (самоблокировка)</td><td>В начале функции стоит <code>if (from == to) return 0;</code></td><td><span class="badge status-ok">OK</span></td></tr>
+              <tr><td>5. bank_total() во время работы потоков</td><td>Подсчёт суммы вызывается строго после вызовов join</td><td><span class="badge status-ok">OK</span></td></tr>
+              <tr><td>6. Скриншот S1 с одним запуском</td><td>На скриншоте S1 зафиксировано 5 независимых запусков с разными дельтами</td><td><span class="badge status-ok">OK</span></td></tr>
+              <tr><td>7. Запуск дедлока без тайм-аута (терминал висит)</td><td>Использована утилита <code>timeout 30</code> с кодом завершения 124</td><td><span class="badge status-ok">OK</span></td></tr>
+              <tr><td>8. Отсутствие анализа Коффмана</td><td>Детально разобраны все 4 условия и разрыв цикла</td><td><span class="badge status-ok">OK</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 10: ПОРЯДОК СДАЧИ И ФАЙЛЫ -->
+    <section id="sec10">
+      <div class="sec-tag">Раздел 10 PDF</div>
+      <h2>10. Порядок сдачи и материалы проекта</h2>
+      <p class="lead">Отчётные материалы оформлены строго по регламенту кафедры:</p>
+
+      <div class="card">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius-sm); flex-wrap: wrap; gap: 12px;">
+            <div>
+              <b style="font-size: 14.5px;">Документ отчёта в формате Word (.docx)</b>
+              <small style="display: block; color: var(--ink-tertiary);">Ретунский_24140_bank_transfers.docx — титульный лист, листинги, ход со скриншотами, аналитика</small>
+            </div>
+            <!-- DIRECT DOWNLOAD LINK FOR DOCX -->
+            <a class="btn btn-primary" href="Ретунский_24140_bank_transfers.docx" download="Ретунский_24140_bank_transfers.docx">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Скачать Ретунский_24140_bank_transfers.docx
+            </a>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius-sm); flex-wrap: wrap; gap: 12px;">
+            <div>
+              <b style="font-size: 14.5px;">Архив исходного кода (.zip)</b>
+              <small style="display: block; color: var(--ink-tertiary);">Ретунский_24140__bank.zip — полный проект: src/, tests/, bench/, Makefile</small>
+            </div>
+            <a class="btn btn-secondary" href="Ретунский_24140__bank.zip" download="Ретунский_24140__bank.zip">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg>
+              Скачать Ретунский_24140__bank.zip
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- LIGHTBOX MODAL -->
+  <div class="lightbox-modal" id="imgLightbox" onclick="closeLightbox(event)">
+    <div class="lightbox-inner" onclick="event.stopPropagation()">
+      <div class="lightbox-head">
+        <div class="lightbox-title" id="lightboxTitle">Просмотр изображения</div>
+        <button class="lightbox-close-btn" type="button" onclick="closeLightbox()" aria-label="Закрыть"><svg class="svg-icon" style="width:16px;height:16px;" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="lightbox-body">
+        <img class="lightbox-img" id="lightboxImg" src="" alt="Скриншот">
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toastNotice">Уведомление</div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const $ = selector => document.querySelector(selector);
+    const $$ = selector => document.querySelectorAll(selector);
+
+    // Toast
+    function showToast(msg) {
+      const t = $('#toastNotice');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // Lightbox modal logic
+    const lightbox = $('#imgLightbox');
+    const lightboxImg = $('#lightboxImg');
+    const lightboxTitle = $('#lightboxTitle');
+    function openLightbox(src, title) {
+      lightboxImg.src = src;
+      lightboxTitle.textContent = title;
+      lightbox.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && lightbox.classList.contains('active')) closeLightbox();
+    });
+
+    // Smooth Typewriter Animation for Stage Subtitles (re-types smoothly on scroll)
+    const typewriters = document.querySelectorAll('.typewriter-text');
+    const typeObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const el = entry.target;
+        if (entry.isIntersecting) {
+          if (el._timer) clearInterval(el._timer);
+          const fullText = el.dataset.text || '';
+          let charIndex = 0;
+          el.textContent = '';
+          el.classList.add('typing');
+          el._timer = setInterval(() => {
+            if (charIndex < fullText.length) {
+              el.textContent += fullText.charAt(charIndex);
+              charIndex++;
+            } else {
+              clearInterval(el._timer);
+              el._timer = null;
+              el.classList.remove('typing');
+            }
+          }, 22);
+        } else {
+          if (el._timer) {
+            clearInterval(el._timer);
+            el._timer = null;
+          }
+          el.classList.remove('typing');
+          el.textContent = '';
+        }
+      });
+    }, { threshold: 0.15 });
+    typewriters.forEach(el => typeObserver.observe(el));
+
+    // CODE VIEWER DATABASE & TABS
+    const codeFiles = {
+      fixed: {
+        path: 'src/bank_fixed.c — Корректная версия (единый порядок)',
+        code: `#include "bank.h"
+
+int bank_transfer(bank_t* bank, int from, int to, long long amount) {
+    if (amount <= 0) return -1;
+    if (from < 0 || from >= bank->num_accounts) return -1;
+    if (to   < 0 || to   >= bank->num_accounts) return -1;
+    if (from == to) return 0; // Предотвращение самоблокировки
+
+    // ЕДИНЫЙ ГЛОБАЛЬНЫЙ ПОРЯДОК: сначала меньший индекс, затем больший
+    int lo = (from < to) ? from : to;
+    int hi = (from < to) ? to   : from;
+    account_t* acc_lo = &bank->accounts[lo];
+    account_t* acc_hi = &bank->accounts[hi];
+
+    pthread_mutex_lock(&acc_lo->mtx);
+    pthread_mutex_lock(&acc_hi->mtx);
+
+    account_t* src = &bank->accounts[from];
+    account_t* dst = &bank->accounts[to];
+
+    int rc = 0;
+    // Проверка баланса СТРОГО внутри критической секции (защита от TOCTOU)
+    if (src->balance < amount) {
+        rc = -1;
+    } else {
+        src->balance -= amount;
+        dst->balance += amount;
+    }
+
+    pthread_mutex_unlock(&acc_hi->mtx);
+    pthread_mutex_unlock(&acc_lo->mtx);
+    return rc;
+}`
+      },
+      broken: {
+        path: 'src/bank_broken.c — Без синхронизации (гонка данных)',
+        code: `#define _DEFAULT_SOURCE
+#include <unistd.h>
+#include <sched.h>
+#include "bank.h"
+
+int bank_transfer(bank_t* bank, int from, int to, long long amount) {
+    if (amount <= 0) return -1;
+    if (from < 0 || from >= bank->num_accounts) return -1;
+    if (to   < 0 || to   >= bank->num_accounts) return -1;
+    if (from == to) return 0;
+
+    account_t* src = &bank->accounts[from];
+    account_t* dst = &bank->accounts[to];
+    long long old_src = src->balance;
+    long long old_dst = dst->balance;
+
+    if (old_src < amount) return -1;
+
+    // Окно гонки: вытеснение потока между проверкой и записью
+    usleep(100);
+
+    src->balance = old_src - amount;
+    dst->balance = old_dst + amount;
+    return 0;
+}`
+      },
+      deadlock: {
+        path: 'src/bank_deadlock.c — С взаимной блокировкой',
+        code: `#include <sched.h>
+#include "bank.h"
+
+int bank_transfer(bank_t* bank, int from, int to, long long amount) {
+    account_t* src = &bank->accounts[from];
+    account_t* dst = &bank->accounts[to];
+
+    // ОШИБКА: захват в порядке from -> to (приводит к циклу Коффмана)
+    pthread_mutex_lock(&src->mtx);   // захват from
+    sched_yield();                   // увеличивает вероятность пересечения
+    pthread_mutex_lock(&dst->mtx);   // захват to: при встречных A->B и B->A DEADLOCK!
+
+    int rc = 0;
+    if (src->balance < amount) {
+        rc = -1;
+    } else {
+        src->balance -= amount;
+        dst->balance += amount;
+    }
+
+    pthread_mutex_unlock(&dst->mtx);
+    pthread_mutex_unlock(&src->mtx);
+    return rc;
+}`
+      },
+      header: {
+        path: 'src/bank.h — Общий интерфейс и структуры данных',
+        code: `#ifndef BANK_H
+#define BANK_H
+
+#include <pthread.h>
+
+#define NUM_ACCOUNTS          10
+#define INITIAL_BALANCE       10000LL
+#define NUM_THREADS           8
+#define TRANSFERS_PER_THREAD  1000
+
+typedef struct {
+    pthread_mutex_t mtx;
+    long long       balance;
+} account_t;
+
+typedef struct {
+    account_t accounts[NUM_ACCOUNTS];
+    int       num_accounts;
+} bank_t;
+
+int bank_transfer(bank_t* bank, int from, int to, long long amount);
+
+static inline void bank_init(bank_t* b, int n, long long initial) {
+    b->num_accounts = n;
+    for (int i = 0; i < n; i++) {
+        pthread_mutex_init(&b->accounts[i].mtx, NULL);
+        b->accounts[i].balance = initial;
+    }
+}
+
+static inline long long bank_total(const bank_t* b) {
+    long long s = 0;
+    for (int i = 0; i < b->num_accounts; i++) s += b->accounts[i].balance;
+    return s;
+}
+
+static inline void bank_destroy(bank_t* b) {
+    for (int i = 0; i < b->num_accounts; i++) {
+        pthread_mutex_destroy(&b->accounts[i].mtx);
+    }
+}
+
+#endif`
+      },
+      tests: {
+        path: 'tests/test_bank.c — Автоматические тесты T1–T7',
+        code: `#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <pthread.h>
+#include "../src/bank.h"
+
+static int fails = 0;
+#define CHECK(cond, msg) do { if (cond) printf("  [OK]   %s\\n", msg); \\
+    else { printf("  [FAIL] %s\\n", msg); fails++; } } while (0)
+
+typedef struct { bank_t* b; int n; unsigned s; } arg_t;
+static unsigned lcg_rand(unsigned* s) { *s = *s * 1103515245u + 12345u; return (*s >> 16) & 0x7fff; }
+
+static void* client_thread(void* p) {
+    arg_t* a = p;
+    for (int i = 0; i < a->n; i++) {
+        int f = lcg_rand(&a->s) % NUM_ACCOUNTS, t = lcg_rand(&a->s) % NUM_ACCOUNTS;
+        bank_transfer(a->b, f, t, 1 + lcg_rand(&a->s) % 100);
+    }
+    return NULL;
+}
+
+static void run_threads(bank_t* b, int th, int n) {
+    pthread_t T[64]; arg_t A[64];
+    for (int i = 0; i < th; i++) {
+        A[i] = (arg_t){ b, n, 1u + i * 7919u };
+        pthread_create(&T[i], NULL, client_thread, &A[i]);
+    }
+    for (int i = 0; i < th; i++) pthread_join(T[i], NULL);
+}
+
+static void check_sum(bank_t* b, const char* name) {
+    long long exp = (long long)NUM_ACCOUNTS * INITIAL_BALANCE, tot = bank_total(b);
+    printf("  total=%lld expected=%lld разница: %lld\\n", tot, exp, tot - exp);
+    CHECK(tot == exp, name);
+}
+
+static void t1(void) { printf("T1 инициализация\\n"); bank_t b; bank_init(&b, NUM_ACCOUNTS, INITIAL_BALANCE); check_sum(&b, "T1 сумма"); bank_destroy(&b); }
+static void t2(void) {
+    printf("T2 один перевод\\n"); bank_t b; bank_init(&b, NUM_ACCOUNTS, INITIAL_BALANCE);
+    int rc = bank_transfer(&b, 0, 1, 100);
+    CHECK(rc == 0 && b.accounts[0].balance == INITIAL_BALANCE - 100 && b.accounts[1].balance == INITIAL_BALANCE + 100, "T2 A-100, B+100");
+    check_sum(&b, "T2 сумма"); bank_destroy(&b);
+}
+static void t3(void) {
+    printf("T3 1000 переводов, 1 поток\\n"); bank_t b; bank_init(&b, NUM_ACCOUNTS, INITIAL_BALANCE);
+    int ok = 0; for (int i = 0; i < 1000; i++) if (bank_transfer(&b, 0, 1, 5) == 0) ok++;
+    CHECK(ok == 1000, "T3 1000 успешных"); check_sum(&b, "T3 сумма"); bank_destroy(&b);
+}
+static void t4(void) {
+    printf("T4 8 потоков x 1000\\n"); bank_t b; bank_init(&b, NUM_ACCOUNTS, INITIAL_BALANCE);
+    run_threads(&b, NUM_THREADS, TRANSFERS_PER_THREAD); check_sum(&b, "T4 сумма"); bank_destroy(&b);
+}
+static void t5(void) {
+    printf("T5 недостаточно средств\\n"); bank_t b; bank_init(&b, 2, 100);
+    int rc = bank_transfer(&b, 0, 1, 200);
+    CHECK(rc == -1 && b.accounts[0].balance == 100 && b.accounts[1].balance == 100, "T5 rc=-1, балансы целы"); bank_destroy(&b);
+}
+static void t6(void) {
+    printf("T6 перевод самому себе\\n"); bank_t b; bank_init(&b, NUM_ACCOUNTS, INITIAL_BALANCE);
+    int rc = bank_transfer(&b, 3, 3, 50);
+    CHECK(rc == 0 && b.accounts[3].balance == INITIAL_BALANCE, "T6 rc=0, баланс не изменился"); bank_destroy(&b);
+}
+static void t7(void) {
+    printf("T7 стресс 16 x 10000\\n"); bank_t b; bank_init(&b, NUM_ACCOUNTS, INITIAL_BALANCE);
+    time_t t0 = time(NULL); run_threads(&b, 16, 10000);
+    check_sum(&b, "T7 сумма"); CHECK(time(NULL) - t0 < 30, "T7 время < 30 c"); bank_destroy(&b);
+}
+
+int main(void) {
+    t1(); t2(); t3(); t4(); t5(); t6(); t7();
+    if (fails) { printf("=== FAILED: %d ===\\n", fails); return 1; }
+    printf("=== ALL TESTS PASSED ===\\n"); return 0;
+}`
+      },
+      bench: {
+        path: 'bench/bench_bank.c — Замер производительности S8',
+        code: `#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
+#include "../src/bank.h"
+
+static double now_ms(void) {
+    struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000.0 + ts.tv_nsec / 1e6;
+}
+typedef struct { bank_t* bank; int n; } bench_arg_t;
+
+static void* worker(void* arg) {
+    bench_arg_t* a = (bench_arg_t*)arg;
+    unsigned int seed = (unsigned int)(size_t)pthread_self();
+    for (int i = 0; i < a->n; i++) {
+        int from = rand_r(&seed) % NUM_ACCOUNTS, to = rand_r(&seed) % NUM_ACCOUNTS;
+        if (from != to) bank_transfer(a->bank, from, to, 10);
+    }
+    return NULL;
+}
+
+int main(int argc, char** argv) {
+    int n_threads = (argc > 1) ? atoi(argv[1]) : 4, n_transfers = 10000;
+    bank_t bank; bank_init(&bank, NUM_ACCOUNTS, INITIAL_BALANCE * 100);
+    pthread_t threads[64]; bench_arg_t args[64];
+
+    double t0 = now_ms();
+    for (int i = 0; i < n_threads; i++) {
+        args[i].bank = &bank; args[i].n = n_transfers;
+        pthread_create(&threads[i], NULL, worker, &args[i]);
+    }
+    for (int i = 0; i < n_threads; i++) pthread_join(threads[i], NULL);
+    double t1 = now_ms();
+
+    long long expected = (long long)NUM_ACCOUNTS * INITIAL_BALANCE * 100;
+    printf("threads=%2d time=%8.2f ms transfers/sec=%10.0f total_ok=%s\\n",
+           n_threads, t1 - t0,
+           (n_threads * n_transfers) / ((t1 - t0) / 1000.0),
+           (bank_total(&bank) == expected) ? "YES" : "NO");
+
+    bank_destroy(&bank);
+    return 0;
+}`
+      },
+      t8: {
+        path: 'tests/test_t8.c — 100 повторных запусков теста T4',
+        code: `#include <stdio.h>
+#include <pthread.h>
+#include "../src/bank.h"
+
+typedef struct { bank_t* b; int n; unsigned s; } arg_t;
+static unsigned lcg_rand(unsigned* s) { *s = *s * 1103515245u + 12345u; return (*s >> 16) & 0x7fff; }
+
+static void* client_thread(void* p) {
+    arg_t* a = p;
+    for (int i = 0; i < a->n; i++) {
+        int f = lcg_rand(&a->s) % NUM_ACCOUNTS, t = lcg_rand(&a->s) % NUM_ACCOUNTS;
+        bank_transfer(a->b, f, t, 1 + lcg_rand(&a->s) % 100);
+    }
+    return NULL;
+}
+
+int main(void) {
+    int failures = 0;
+    long long expected = (long long)NUM_ACCOUNTS * INITIAL_BALANCE;
+
+    for (int i = 0; i < 100; i++) {
+        bank_t b; bank_init(&b, NUM_ACCOUNTS, INITIAL_BALANCE);
+        pthread_t T[NUM_THREADS]; arg_t A[NUM_THREADS];
+        for (int k = 0; k < NUM_THREADS; k++) {
+            A[k] = (arg_t){ &b, TRANSFERS_PER_THREAD, 1u + k * 7919u + i * 104729u };
+            pthread_create(&T[k], NULL, client_thread, &A[k]);
+        }
+        for (int k = 0; k < NUM_THREADS; k++) pthread_join(T[k], NULL);
+        if (bank_total(&b) != expected) failures++;
+        bank_destroy(&b);
+    }
+
+    printf("T8: нарушений инварианта %d из 100\\n", failures);
+    return failures ? 1 : 0;
+}`
+      },
+      makefile: {
+        path: 'Makefile — Правила сборки и тестов',
+        code: `CC = gcc
+CFLAGS = -pthread -g -Wall -Wextra -O2
+B = build
+.RECIPEPREFIX = >
+.PHONY: all test run-broken run-deadlock bench-all tsan asan valgrind clean
+
+all: $(B)/test_fixed $(B)/test_broken $(B)/test_deadlock $(B)/bench_bank
+
+$(B)/test_%: tests/test_bank.c src/bank_%.c src/bank.h
+> @mkdir -p $(B)
+> $(CC) $(CFLAGS) -o $@ tests/test_bank.c src/bank_$*.c
+
+$(B)/bench_bank: bench/bench_bank.c src/bank_fixed.c src/bank.h
+> @mkdir -p $(B)
+> $(CC) $(CFLAGS) -o $@ bench/bench_bank.c src/bank_fixed.c
+
+test: $(B)/test_fixed
+> @./$<; echo "exit code: $$?"
+
+run-broken: $(B)/test_broken
+> @for i in 1 2 3 4 5; do echo "--- run $$i ---"; ./$< | grep -E "T4|T7|разница" || true; done
+
+run-deadlock: $(B)/test_deadlock
+> @timeout 30 ./$<; echo "exit code: $$?"
+
+bench-all: $(B)/bench_bank
+> @for t in 1 2 4 8 16; do ./$< $$t; done
+
+tsan: src/bank_fixed.c tests/test_bank.c src/bank.h
+> @mkdir -p $(B)
+> $(CC) $(CFLAGS) -fsanitize=thread -o $(B)/test_fixed_tsan tests/test_bank.c src/bank_fixed.c
+> ./$(B)/test_fixed_tsan; echo "exit code: $$?"
+
+asan: src/bank_fixed.c tests/test_bank.c src/bank.h
+> @mkdir -p $(B)
+> $(CC) $(CFLAGS) -fsanitize=address,undefined -o $(B)/test_fixed_asan tests/test_bank.c src/bank_fixed.c
+> ./$(B)/test_fixed_asan
+
+valgrind: $(B)/test_fixed
+> valgrind --leak-check=full --show-leak-kinds=all ./$<
+
+clean:
+> rm -rf $(B)`
+      }
+    };
+
+    function showCode(key) {
+      const data = codeFiles[key];
+      if (!data) return;
+      $('#codeFilePath').textContent = data.path;
+      const display = $('#codeDisplay');
+      display.style.opacity = '0';
+      display.style.transform = 'translateY(3px)';
+      display.textContent = data.code;
+      requestAnimationFrame(() => {
+        display.style.transition = 'opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)';
+        display.style.opacity = '1';
+        display.style.transform = 'translateY(0)';
+      });
+      $$('#codeTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.file === key));
+    }
+    showCode('fixed');
+
+    $$('#codeTabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => showCode(btn.dataset.file));
+    });
+
+    $('#copyCodeBtn').addEventListener('click', async () => {
+      const txt = $('#codeDisplay').textContent;
+      const btn = $('#copyCodeBtn');
+      try {
+        await navigator.clipboard.writeText(txt);
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Скопировано!';
+        showToast('Код скопирован в буфер');
+        setTimeout(() => { btn.innerHTML = originalHtml; }, 1800);
+      } catch (e) {
+        showToast('Ошибка при копировании');
+      }
+    });
+
+    // INTERACTIVE TRACE SIMULATOR
+    const traceSteps = [
+      { step: 0, lockA: false, lockB: false, balA: 10000, balB: 10000, desc: 'Начало. Счета свободны, сумма 20 000 ₽' },
+      { step: 1, lockA: true,  lockB: false, balA: 10000, balB: 10000, desc: 'lock(A): Поток захватил счёт 0' },
+      { step: 2, lockA: true,  lockB: true,  balA: 10000, balB: 10000, desc: 'lock(B): Поток захватил счёт 1' },
+      { step: 3, lockA: true,  lockB: true,  balA: 10000, balB: 10000, desc: 'Проверка: 10000 >= 100' },
+      { step: 4, lockA: true,  lockB: true,  balA: 9900,  balB: 10000, desc: 'A -= 100: Деньги «в полёте» (19 900 ₽)' },
+      { step: 5, lockA: true,  lockB: true,  balA: 9900,  balB: 10100, desc: 'B += 100: Зачисление, сумма 20 000 ₽' },
+      { step: 6, lockA: true,  lockB: false, balA: 9900,  balB: 10100, desc: 'unlock(B): Счёт 1 освобождён' },
+      { step: 7, lockA: false, lockB: false, balA: 9900,  balB: 10100, desc: 'unlock(A): Перевод завершён' }
+    ];
+
+    let currentStepIdx = 0;
+    let traceTimer = null;
+
+    function applyTraceStep(idx) {
+      currentStepIdx = Math.max(0, Math.min(traceSteps.length - 1, idx));
+      const s = traceSteps[currentStepIdx];
+
+      $('#traceBalA').textContent = s.balA.toLocaleString('ru-RU');
+      $('#traceBalB').textContent = s.balB.toLocaleString('ru-RU');
+
+      $('#cardA').classList.toggle('locked', s.lockA);
+      $('#lockStatusA').textContent = s.lockA ? 'Заблокирован' : 'Свободен';
+
+      $('#cardB').classList.toggle('locked', s.lockB);
+      $('#lockStatusB').textContent = s.lockB ? 'Заблокирован' : 'Свободен';
+
+      const sum = s.balA + s.balB;
+      const formattedSum = sum.toLocaleString('ru-RU') + '\u00a0₽';
+      $('#traceSumVal').textContent = formattedSum;
+      const inFlight = sum !== 20000;
+      $('#traceSumInd').classList.toggle('in-flight', inFlight);
+      $('#traceSumStatus').textContent = inFlight ? 'Деньги «в полёте» (19\u00a0900\u00a0₽)' : 'Инвариант суммы сохранён';
+      $('#traceSumDesc').textContent = inFlight
+        ? 'Оба мьютекса захвачены: ни один поток не видит промежуточное состояние'
+        : 'Согласованное состояние целостности балансов';
+
+      $$('#traceStepList .trace-step-item').forEach(item => {
+        item.classList.toggle('active', parseInt(item.dataset.step) === currentStepIdx);
+      });
+    }
+
+    function stopTracePlay() {
+      if (traceTimer) {
+        clearInterval(traceTimer);
+        traceTimer = null;
+        $('#tracePlayBtn').textContent = 'Автопоказ';
+      }
+    }
+
+    $('#traceNextBtn').addEventListener('click', () => {
+      stopTracePlay();
+      applyTraceStep(currentStepIdx + 1);
+    });
+    $('#tracePrevBtn').addEventListener('click', () => {
+      stopTracePlay();
+      applyTraceStep(currentStepIdx - 1);
+    });
+
+    $$('#traceStepList .trace-step-item').forEach(item => {
+      item.addEventListener('click', () => {
+        stopTracePlay();
+        applyTraceStep(parseInt(item.dataset.step));
+      });
+    });
+
+    $('#tracePlayBtn').addEventListener('click', () => {
+      if (traceTimer) {
+        stopTracePlay();
+        return;
+      }
+      $('#tracePlayBtn').textContent = 'Пауза';
+      if (currentStepIdx >= traceSteps.length - 1) applyTraceStep(0);
+      traceTimer = setInterval(() => {
+        if (currentStepIdx >= traceSteps.length - 1) {
+          stopTracePlay();
+          return;
+        }
+        applyTraceStep(currentStepIdx + 1);
+      }, 950);
+    });
+
+    applyTraceStep(0);
+
+    // SIDEBAR SCROLLSPY
+    const sections = $$('main section');
+    const navLinks = $$('#sidebarNav a');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          navLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+          });
+        }
+      });
+    }, { rootMargin: '-25% 0px -65% 0px' });
+
+    sections.forEach(sec => observer.observe(sec));
+  </script>
+</body>
+</html>
